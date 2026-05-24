@@ -1,0 +1,26 @@
+# ─── Node / Frontend ──────────────────────────────────────────
+haven-books/node_modules/
+haven-books/dist/
+haven-books/.env
+haven-books/.env.local
+haven-books/.env.production
+
+# ─── Laravel / Backend ────────────────────────────────────────
+backend/bookStoreBackend/vendor/
+backend/bookStoreBackend/node_modules/
+backend/bookStoreBackend/.env
+backend/bookStoreBackend/storage/logs/*.log
+backend/bookStoreBackend/storage/framework/cache/data/*
+backend/bookStoreBackend/storage/framework/sessions/*
+backend/bookStoreBackend/storage/framework/views/*
+backend/bookStoreBackend/bootstrap/cache/*.php
+backend/bookStoreBackend/public/hot
+backend/bookStoreBackend/public/storage
+
+# ─── General ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.stackdump
+*.log
+*.zip
+*.tar.gz

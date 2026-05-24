@@ -1,0 +1,933 @@
+composer create-project laravel/laravel project-name := 
+                                        TOO MAKEE A PROJEC THIS ISS THEE COMMAND thiss iss too install byy one by nee projectt 
+
+//to make a blade file in  views folder:-php artisan make:view filename
+
+//globally to install laravel
+Globalyy to install laravel := composer global require laravel/installer
+to makee proejctt after installed globally := laravel new project-name
+
+//globally t o make a project
+composer create-project laravel/laravel project-name $$$$$$$$$$$
+
+//to run thee project
+Thiss iss theee commandd too run thee project := php artisan serve
+
+
+//thiss aree thee inbild routingg given by laravel
+1️⃣ What whereNumber() Means
+
+whereNumber() is used to allow only numbers in a route parameter.
+
+Meaning
+id must be only numbers.
+
+4️⃣ Other Built-In Route Constraints
+
+Laravel also provides these:
+
+whereAlpha()
+
+Only letters allowed.
+
+Route::get('/user/{name}', function ($name) {
+    return $name;
+})->whereAlpha('name');
+
+Example:
+
+/user/aditya   ✅
+/user/123      ❌
+
+//5th
+whereAlphaNumeric()
+
+Letters + numbers allowed.
+
+->whereAlphaNumeric('username');
+
+Example:
+
+/user/aditya123  ✅
+
+---------------
+->whereUuid()
+
+Used for UUID values.
+
+Example:
+
+/user/550e8400-e29b-41d4-a716-446655440000
+
+
+//6th
+whereIn()
+
+Allow only specific values.
+
+Route::get('/category/{type}', function ($type) {
+    return $type;
+})->whereIn('type', ['movie', 'song']);
+
+Example:
+
+/category/movie  ✅
+/category/song   ✅
+/category/book   ❌
+
+5️⃣ Simple Summary
+Method	Allows
+whereNumber()	only numbers
+whereAlpha()	only letters
+whereAlphaNumeric()	letters + numbers
+whereUuid()	UUID format
+whereIn()	specific values
+
+
+| Method              | Allows            |
+| ------------------- | ----------------- |
+| whereNumber()       | only numbers      |
+| whereAlpha()        | only letters      |
+| whereAlphaNumeric() | letters + numbers |
+| whereUuid()         | UUID format       |
+| whereIn()           | specific values   |
+
+
+//next topic 
+
+FALLBACK Method
+
+1️⃣ What is a Fallback Route?
+
+A fallback route runs when no other route matches the URL.
+
+Simple meaning:
+
+If the user enters a wrong URL, Laravel will show a custom response instead of the default 404 page.
+
+//fallback methodRoute::fallback(function(){
+    return "<h1>404 Page Youu will noww see Page not foundd chekk your routee agian </h1>";   
+})
+
+4️⃣ Important Rule
+
+⚠️ Fallback route must always be written at the bottom of the routes file.
+
+
+next topic //Redirrect Method 
+
+----------------------------------------------------------------------------------------------------
+
+REDIRECT Method
+
+1️⃣ What is Redirect?
+
+Redirect means:
+
+👉 Send the user from one URL to another URL automatically.
+
+Example:
+
+User opens:
+
+/home
+
+Laravel redirects to:
+
+/dashboard
+2️⃣ Basic Redirect Syntax
+Route::redirect('/home', '/dashboard');
+Meaning
+
+If user visits /home
+
+Laravel will automatically go to /dashboard
+
+Example URL:
+
+http://127.0.0.1:8000/home
+
+User will see:
+
+http://127.0.0.1:8000/dashboard
+
+3️⃣ Redirect with Status Code
+Route::redirect('/old-page', '/new-page', 301);
+
+Here:
+
+301 means permanent redirect.
+
+Common redirect codes:
+
+Code	Meaning
+301	permanent redirect
+302	temporary redirect
+
+Example:
+
+Route::redirect('/login-old', '/login', 301);
+4️⃣ Redirect Using Function
+
+Another way:
+
+Route::get('/home', function () {
+    return redirect('/dashboard');
+});
+
+Meaning:
+
+User visits: /home
+
+Laravel sends them to: /dashboard
+
+5️⃣ Redirect to a Named Route
+
+Example:
+
+Route::get('/dashboard', function () {
+    return "Dashboard Page";
+})->name('dashboard');
+
+Redirect: return redirect()->route('dashboard');
+
+6️⃣ Redirect Back
+
+Used after forms.
+
+return redirect()->back();
+
+Meaning:
+
+User goes back to previous page.
+
+7️⃣ Redirect with Message
+
+Example:
+
+return redirect('/home')->with('success', 'Login successful');
+
+This sends a message to the next page.
+
+8️⃣ Real Example
+Route::get('/login', function () {
+    return redirect('/dashboard');
+});
+
+Route::get('/dashboard', function () {
+    return "Welcome to dashboard";
+});
+
+If user opens:
+
+/login
+
+They automatically go to:
+
+/dashboard
+9️⃣ Simple Flow
+User visits URL
+      ↓
+Laravel checks redirect
+      ↓
+Laravel sends user to another URL
+      ↓
+New page loads
+🔟 One Line Definition
+
+Redirect = Automatically sending the user from one URL to another URL.
+
+------------------------------------------------------------------------------------------------------------
+
+//multiple parameters     :-- new topic 
+
+2️⃣ What are Multiple Parameters?
+
+Multiple parameters mean passing more than one value through the URL.
+
+Example URL:
+
+http://127.0.0.1:8000/sum/5/3
+
+Here:
+
+n1 = 5
+n2 = 3
+3️⃣ Code Explanation
+Route Definition
+Route::get('/sum/{n1}/{n2}', function ($n1, $n2) {
+
+Meaning:
+
+/sum/ → main route
+
+{n1} → first parameter
+
+{n2} → second parameter
+
+Laravel takes values from the URL and sends them into the function.
+
+4️⃣ Function Parameters
+function ($n1, $n2)
+
+These variables receive the values.
+
+Example:
+
+URL:
+
+/sum/10/20
+
+Inside function:
+
+$n1 = 10
+$n2 = 20
+5️⃣ Returning the Result
+return $n1 + $n2;
+
+This adds both numbers.
+
+Example:
+
+10 + 20 = 30
+
+Browser output:
+
+30
+6️⃣ Full Example
+Route::get('/sum/{n1}/{n2}', function ($n1, $n2) {
+    return "Sum = " . ($n1 + $n2);
+});
+
+Open in browser:
+
+http://127.0.0.1:8000/sum/5/7
+
+Output:
+
+Sum = 12
+7️⃣ Important Rule
+
+The order must match.
+
+Route::get('/sum/{n1}/{n2}', function ($n1, $n2)
+
+If URL is:
+
+/sum/3/9
+
+Then:
+
+n1 = 3
+n2 = 9
+8️⃣ Adding Validation (Optional)
+
+You can restrict parameters to numbers.
+
+Route::get('/sum/{n1}/{n2}', function ($n1, $n2) {
+    return $n1 + $n2;
+})->whereNumber(['n1','n2']);
+
+Now only numbers are allowed.
+
+9️⃣ Simple Real-Life Example
+
+URL:
+
+/product/15/2024
+
+Parameters:
+
+product id = 15
+year = 2024
+
+Laravel reads them from the URL.
+
+--------------------------------------------------------------------------------------------------------        
+
+🔟 Simple Definition
+
+Multiple parameters = passing multiple values in the URL and using them inside the route function.
+
+Example structure:
+
+/route/{param1}/{param2}/{param3}
+
+
+//Routee using view method
+1️⃣ What is Route::view()?
+
+Route::view() is a shortcut method in Laravel.
+
+It lets you show a view page directly without writing a function.
+
+Normally we write:
+
+Route::get('/about', function () {
+    return view('about');
+});
+
+But Laravel gives a shorter way:
+
+Route::view('/about', 'about');
+
+Both do exactly the same thing.
+
+2️⃣ Syntax
+Route::view(URL, VIEWNAME);
+
+Example:
+
+Route::view('/about', 'about');
+
+Meaning:
+
+When user visits
+
+/about
+
+Laravel loads:
+
+resources/views/about.blade.php
+3️⃣ Example for Your Pages
+
+In routes/web.php
+
+Route::view('/dashboard', 'dashboard');
+Route::view('/about', 'about');
+Route::view('/contact', 'contact');
+Route::view('/categories', 'categories');
+4️⃣ How Laravel Finds the File
+
+Example route:
+
+Route::view('/dashboard', 'dashboard');
+
+Laravel automatically loads:
+
+resources/views/dashboard.blade.php
+5️⃣ Example Blade File
+
+📄 dashboard.blade.php
+
+<h1>Welcome to Dashboard</h1>
+
+<a href="/about">About</a>
+<a href="/contact">Contact</a>
+<a href="/categories">Categories</a>
+6️⃣ How It Works
+
+User opens:
+
+http://127.0.0.1:8000/dashboard
+
+Flow:
+
+User request
+      ↓
+routes/web.php
+      ↓
+Route::view()
+      ↓
+dashboard.blade.php
+      ↓
+page displayed
+7️⃣ Difference Between Route::get() and Route::view()
+Method	When Used
+Route::get()	when logic is needed
+Route::view()	when only view is needed
+
+Example:
+
+Route::get
+Route::get('/sum/{a}/{b}', function ($a,$b) {
+    return $a + $b;
+});
+Route::view
+Route::view('/about','about');
+8️⃣ Passing Data in Route::view()
+
+You can also send data to the view.
+
+Route::view('/profile','profile',[
+    'name' => 'Aditya'
+]);
+
+Blade file:
+
+<h1>Hello {{ $name }}</h1>
+
+Output:
+
+Hello Aditya
+9️⃣ Simple Definition
+
+Route::view() = Directly return a view page without writing a function.
+
+✅ Example summary:
+
+Route::view('/about','about');
+
+means
+
+/about → about.blade.php
+
+//passing dta too views =====1)assosiative arrays    2) with()    3)compact()
+
+--------------------------------------------------------------------------------------------------------    
+
+1️⃣ Associative Array Method
+
+This is the most common method.
+
+Route
+Route::get('/profile', function () {
+    return view('profile', [
+        'name' => 'Aditya',
+        'age' => 22
+    ]);
+});
+Explanation
+'key' => 'value'
+
+Example:
+
+'name' => 'Aditya'
+
+name = variable name in view
+
+Aditya = value
+
+Blade View
+
+📄 resources/views/profile.blade.php
+
+<h1>Name : {{ $name }}</h1>
+<h2>Age : {{ $age }}</h2>
+Output
+Name : Aditya
+Age : 22
+2️⃣ with() Method
+
+Laravel also provides a method called with().
+
+Route
+Route::get('/profile', function () {
+    return view('profile')->with('name', 'Aditya');
+});
+Explanation
+with(variable_name , value)
+
+Example:
+
+with('name','Aditya')
+Blade View
+<h1>Hello {{ $name }}</h1>
+
+Output:
+
+Hello Aditya
+Multiple with()
+return view('profile')
+        ->with('name','Aditya')
+        ->with('age',22);
+3️⃣ compact() Method
+
+This is very commonly used by developers.
+
+Route
+Route::get('/profile', function () {
+
+    $name = "Aditya";
+    $age = 22;
+
+    return view('profile', compact('name','age'));
+});
+Explanation
+compact('name','age')
+
+means send variables:
+
+$name
+$age
+
+to the view.
+
+Blade View
+<h1>Name : {{ $name }}</h1>
+<h2>Age : {{ $age }}</h2>
+Visual Flow
+Route
+   ↓
+send data
+   ↓
+View (Blade)
+   ↓
+display using {{ }}
+Comparison Table
+Method	Example
+Associative Array	view('profile',['name'=>'Aditya'])
+with()	view('profile')->with('name','Aditya')
+compact()	view('profile',compact('name'))
+Which One Developers Use Most
+
+Most Laravel developers prefer:
+
+compact()
+
+or
+
+associative array
+
+because they are cleaner.
+
+Simple Example (Best Practice)
+Route::get('/student', function () {
+
+    $name = "Aditya";
+    $course = "Laravel";
+
+    return view('student', compact('name','course'));
+
+});
+
+View:
+
+<h1>{{ $name }}</h1>
+<p>{{ $course }}</p>
+
+Output:
+
+Aditya
+Laravel
+
+✅ Simple definition
+
+Passing data to views = sending variables from route/controller to Blade view page.
+
+--------------------------------------------------------------------------------------------------------
+
+🔹 PHP Inbuilt Array Functions
+
+These functions are used to work with arrays easily.
+
+✅ 1. count()
+
+👉 Counts number of elements in array
+
+$arr = [1, 2, 3, 4];
+echo count($arr); // Output: 4
+✅ 2. array_push()
+
+👉 Add element at the end
+
+$arr = [1, 2];
+array_push($arr, 3);
+print_r($arr); // [1,2,3]
+✅ 3. array_pop()
+
+👉 Remove last element
+
+$arr = [1,2,3];
+array_pop($arr);
+print_r($arr); // [1,2]
+✅ 4. array_shift()
+
+👉 Remove first element
+
+$arr = [1,2,3];
+array_shift($arr);
+print_r($arr); // [2,3]
+✅ 5. array_unshift()
+
+👉 Add element at beginning
+
+$arr = [2,3];
+array_unshift($arr, 1);
+print_r($arr); // [1,2,3]
+✅ 6. in_array()
+
+👉 Check if value exists
+
+$arr = [10,20,30];
+echo in_array(20, $arr); // 1 (true)
+✅ 7. array_merge()
+
+👉 Merge two arrays
+
+$a = [1,2];
+$b = [3,4];
+$c = array_merge($a,$b);
+print_r($c); // [1,2,3,4]
+✅ 8. sort()
+
+👉 Sort array (ascending)
+
+$arr = [3,1,2];
+sort($arr);
+print_r($arr); // [1,2,3]
+✅ 9. rsort()
+
+👉 Sort descending
+
+$arr = [3,1,2];
+rsort($arr);
+print_r($arr); // [3,2,1]
+✅ 10. array_keys()
+
+👉 Get all keys
+
+$arr = ["a"=>10, "b"=>20];
+print_r(array_keys($arr)); // ["a","b"]
+🔹 PHP Inbuilt String Functions
+
+Used to manipulate strings (text).
+
+✅ 1. strlen()
+
+👉 Length of string
+
+echo strlen("Hello"); // 5
+✅ 2. str_word_count()
+
+👉 Count words
+
+echo str_word_count("Hello world"); // 2
+✅ 3. strrev()
+
+👉 Reverse string
+
+echo strrev("Hello"); // olleH
+✅ 4. strpos()
+
+👉 Find position of word
+
+echo strpos("Hello world", "world"); // 6
+✅ 5. str_replace()
+
+👉 Replace text
+
+echo str_replace("world","PHP","Hello world");
+// Hello PHP
+✅ 6. strtolower()
+
+👉 Convert to lowercase
+
+echo strtolower("HELLO"); // hello
+✅ 7. strtoupper()
+
+👉 Convert to uppercase
+
+echo strtoupper("hello"); // HELLO
+✅ 8. trim()
+
+👉 Remove extra spaces
+
+echo trim("  hello  "); // hello
+✅ 9. explode()
+
+👉 Convert string → array
+
+$str = "a,b,c";
+$arr = explode(",", $str);
+print_r($arr); // [a,b,c]
+✅ 10. implode()
+
+👉 Convert array → string
+
+$arr = ["a","b","c"];
+echo implode(",", $arr); // a,b,c
+🔥 Viva Tip (Important)
+
+👉 If examiner asks:
+
+Array functions → used to handle multiple values
+String functions → used to handle text data
+
+
+--------------------------------------------------
+📘 PHP Inbuilt Array Functions (Short Notes)
+
+👉 Used to store & manage multiple values
+
+count() → Number of elements
+array_push() → Add element at end
+array_pop() → Remove last element
+array_shift() → Remove first element
+array_unshift() → Add at beginning
+in_array() → Check value exists or not
+array_merge() → Combine arrays
+sort() → Sort ascending
+rsort() → Sort descending
+array_keys() → Get all keys
+
+✅ One-line: Array functions help in adding, removing, searching, and sorting elements
+
+📘 PHP Inbuilt String Functions (Short Notes)
+
+👉 Used to handle text (strings)
+
+strlen() → Length of string
+str_word_count() → Count words
+strrev() → Reverse string
+strpos() → Find position of text
+str_replace() → Replace text
+strtolower() → Lowercase
+strtoupper() → Uppercase
+trim() → Remove spaces
+explode() → String → Array
+implode() → Array → String
+
+✅ One-line: String functions help in modifying and analyzing text
+
+🔥 Ultra Short Revision (1 line)
+
+👉 Array → multiple data handle
+👉 String → text handle
+
+
+
+//middleware 
+
+// thiss commandd ss forr makiing a filee of the middlewaree andd middelware are made 
+//in app/htt/ then make middleware folder in that  middleware file are building
+->php artisan make:middleware TestMiddleware
+->php artisan make:middleware ageCheck
+->php artisan make:middleware countyCheck
+
+
+📘 What is Middleware?
+
+👉 Middleware is a filter that runs before or after a request reaches the controller.
+
+👉 Simple meaning:
+
+Middleware = Security/Checking layer between request and controller
+
+🔄 Flow (Very Important)
+
+User → Middleware → Controller → Response
+
+🧠 Easy Real-Life Example
+
+👉 Think of middleware like a security guard 🚔
+
+User tries to enter (request)
+Guard checks:
+Logged in or not?
+Has permission or not?
+Then allows or blocks
+📘 Why Middleware is Used?
+✅ Authentication (login check)
+✅ Authorization (permission check)
+✅ Logging requests
+✅ Prevent unauthorized access
+✅ Security (CSRF protection)
+📘 Example in Laravel
+Route::get('/dashboard', function () {
+    return "Welcome";
+})->middleware('auth');
+
+👉 Meaning:
+
+Only logged-in users can access /dashboard
+📘 Creating Middleware
+php artisan make:middleware CheckAge
+Example Middleware Code
+public function handle($request, Closure $next)
+{
+    if ($request->age < 18) {
+        return "Not Allowed";
+    }
+
+    return $next($request);
+}
+
+👉 If condition true → block
+👉 Else → go to controller
+
+📘 Types of Middleware
+🔹 1. Global Middleware
+
+👉 Runs on every request
+
+🔹 2. Route Middleware
+
+👉 Runs on specific routes
+
+🔹 3. Group Middleware
+
+👉 Runs on a group of routes
+
+🔥 Viva Ready Answers
+
+👉 What is Middleware?
+➡️ It is a filtering layer that checks request before reaching controller.
+
+👉 Why use Middleware?
+➡️ For security, authentication, and validation.
+
+👉 Where it works?
+➡️ Between request and controller.
+
+
+
+
+
+
+
+// for Authorization
+
+//? 1 create a new project
+// Composer create-project laravel/laravel myapp
+// cd myapp
+
+//? 2 Install authorization (breeze)
+// Composer require laravel/breeze --dev
+// php artisan breeze:install
+// select blade , dark mode -> enter , testin framework -> pest
+// php artisan migrate
+// npm install
+// php artisan serve
+
+// too generat a key thiss commandd should dbee run in the CMD :=php artisan key:generate
+
+
+
+
+//storeagee  TOPIC :- to uploaod 
+
+“Laravel provides three main file upload methods:
+
+store() for automatic upload with unique name
+storeAs() for custom file name
+move() for manual upload to public 
+
+//how to work with A DATABASE
+1. create DATABASE(create databse laravel)
+2. creating migration(create table) ==== php artisan make:migration create_student_table
+3. creating seeding() === Insert  initial record 
+two ways:- 1.Seeder:-real time data and actual data
+        command:-{php artisan make:seeder(seeder name)}
+         2. factory:- for testing we should use factory(dummy data)
+          command:-{php artisan make:factory(factory name)}
+4. creating model:-
+        command:- php artisan make:model student
+
+
+## how to create a migrate:- php artisan migrate
+
+
+Queston :- what will happen when we will not use migration :- itss meanss when everr wee will do changess in databse  then in 
+             in team mate we have to tell indivi likee thatt(se it from chtgpt)
+
+
+
+
+
+
+
+
+             //google verrification
+             Client ID:-902405653902-grcub7se39iv70kpio6tqh9i8d64us84.apps.googleusercontent.com
+             Client secret:-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
