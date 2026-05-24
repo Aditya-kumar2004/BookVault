@@ -276,18 +276,7 @@ While BookVault is a robust, production-ready full-stack application, incorporat
 └──────────────┘                 └────────────────┘                 └──────────────┘
 ```
 
-### 🛰️ 2. WebRTC Video Consultation
-* **Objective**: Host live, face-to-face book club discussions or author meet-and-greets directly on the platform.
-* **Proposed Design**: Connect client browsers through peer-to-peer WebRTC connections mapped via a signaling server (Node.js/Socket.io).
-```
-┌───────────────┐              ┌──────────────────┐              ┌───────────────┐
-│ User A Browser│ <──────────> │ Signaling Server │ <──────────> │ User B Browser│
-│               │  SDP/ICE     │ (Node / Socket)  │  SDP/ICE     │               │
-│               │ <============================================> │               │
-└───────────────┘                   Peer-to-Peer Media Stream    └───────────────┘
-```
-
-### 🏎️ 3. Database Caching & Redis Integration
+### 🏎️ 2. Database Caching & Redis Integration
 * **Objective**: Reduce database strain during surge sales.
 * **Proposed Design**: Route standard catalog search lists (`GET /api/books`) through a **Redis cache** with automatic invalidation on updates.
 
