@@ -292,8 +292,8 @@ This project is licensed under the **MIT License** — feel free to utilize, mod
 
 **Aditya Kumar**
 * Full Stack Software Engineer specializing in modern scalable systems.
-* **GitHub**: [github.com/aditya](https://github.com)
-* **LinkedIn**: [linkedin.com/in/aditya](https://linkedin.com)
+* **GitHub**: [Aditya-kumar2004](https://github.com/Aditya-kumar2004)
+* **LinkedIn**: [Aditya Kumar](https://www.linkedin.com/in/aditya-kumar7050/)
 * **Email**: [adityakuma876@gmail.com](mailto:adityakuma876@gmail.com)
 
 ---
