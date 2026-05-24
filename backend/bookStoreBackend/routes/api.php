@@ -11,7 +11,7 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\RazorpayController;
 
-Route::get('/run-migrations', function () {
+$runMigrations = function () {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
@@ -26,7 +26,10 @@ Route::get('/run-migrations', function () {
             'message' => $e->getMessage()
         ], 500);
     }
-});
+};
+
+Route::get('/run-migrations', $runMigrations);
+Route::get('/run_migrations', $runMigrations);
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
