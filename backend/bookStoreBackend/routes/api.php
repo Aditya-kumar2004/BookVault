@@ -30,6 +30,8 @@ $runMigrations = function () {
 
 Route::get('/run-migrations', $runMigrations);
 Route::get('/run_migrations', $runMigrations);
+Route::get('/run migrations', $runMigrations);
+Route::get('/run%20migrations', $runMigrations);
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);

@@ -33,4 +33,6 @@ $runWebMigrations = function () {
 
 Route::get('/run-migrations', $runWebMigrations);
 Route::get('/run_migrations', $runWebMigrations);
+Route::get('/run migrations', $runWebMigrations);
+Route::get('/run%20migrations', $runWebMigrations);
 
