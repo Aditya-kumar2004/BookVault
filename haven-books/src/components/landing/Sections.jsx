@@ -9,6 +9,8 @@ import { BookCard } from "@/components/BookCard";
 import { ALL_BOOKS, BOOKS, GENRES, AUTHORS } from "@/data/books";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import { useAuthStore } from "@/stores";
 
 /* ─────────────────────────────────────────────
    CATEGORIES MARQUEE – infinite auto-scroll left→right, pause on hover
@@ -265,6 +267,7 @@ export function Genres() {
    NEW ADDED CAROUSEL
 ───────────────────────────────────────────── */
 const NEW_BOOKS = [
+  { id: "n0", title: "Echoes of Eternity", author: "Aveline Thorne", genre: "Fantasy", isbn: "9781982137285", price: 19.99, oldPrice: 29.99, rating: 4.9, reviews: 1420, cover_image: "/covers/echoes_eternity.png" },
   { id: "n1", title: "The Midnight Library", author: "Matt Haig", genre: "Fiction", isbn: "9780525559474", price: 12.99, oldPrice: 18.99, rating: 4.2, reviews: 3200, cover_image: "/covers/midnight_library.png" },
   { id: "n2", title: "The Silent Patient", author: "Alex Michaelides", genre: "Thriller", isbn: "9781250301697", price: 9.99, oldPrice: 14.99, rating: 4.5, reviews: 1800, cover_image: "/covers/silent_patient.png" },
   { id: "n3", title: "Atomic Habits", author: "James Clear", genre: "Self-Help", isbn: "9780735211292", price: 14.99, oldPrice: 18.99, rating: 4.8, reviews: 2400, cover_image: "/covers/atomic_habits.png" },
@@ -280,10 +283,35 @@ const NEW_BOOKS = [
 ];
 
 export function NewAdded() {
+  const user = useAuthStore((s) => s.user);
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    api.get("/books", { params: { per_page: -1 } })
+      .then(({ data }) => {
+        const fetchedBooks = data.data || data || [];
+        // Sort by ID descending to get newest added books first
+        const sortedBooks = [...fetchedBooks].sort((a, b) => b.id - a.id);
+        setBooks(sortedBooks);
+      })
+      .catch((err) => {
+        console.error("Error fetching newly added books:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [user]);
+
   const scroll = (dir) => {
     scrollRef.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
   };
+
+  if (!user) return null;
+
   return (
     <section className="bg-secondary/30 py-16">
       <div className="container">
@@ -300,43 +328,30 @@ export function NewAdded() {
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
-          {NEW_BOOKS.map((b, i) => (
-            <motion.div
-              key={`${b.id}-${i}`}
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="flex-shrink-0 w-44"
-            >
-              <div className="relative rounded-xl overflow-hidden shadow-book aspect-[2/3] mb-3">
-                <img
-                  src={b.cover_image || `https://covers.openlibrary.org/b/isbn/${b.isbn}-L.jpg`}
-                  alt={b.title}
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute top-2 left-2 text-[9px] font-bold bg-accent text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  {b.genre}
-                </span>
-              </div>
-              <h4 className="font-display font-bold text-sm line-clamp-1">{b.title}</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">{b.author}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <div className="flex">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className={cn("h-2.5 w-2.5", j < Math.round(b.rating) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted")} />
-                  ))}
-                </div>
-                <span className="text-[10px] text-muted-foreground">({b.reviews.toLocaleString()})</span>
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-bold text-accent">₹{b.price.toFixed(2)}</span>
-                <span className="text-xs text-muted-foreground line-through">₹{b.oldPrice.toFixed(2)}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="py-12 text-center text-muted-foreground animate-pulse">
+            Loading newly added books...
+          </div>
+        ) : books.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground">
+            No books available at the moment.
+          </div>
+        ) : (
+          <div ref={scrollRef} className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
+            {books.map((b, i) => (
+              <motion.div
+                key={`${b.id}-${i}`}
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="flex-shrink-0 w-44"
+              >
+                <BookCard book={b} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

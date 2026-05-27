@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { BookCard } from "@/components/BookCard";
-import { ALL_BOOKS } from "@/data/books";
+import { ALL_BOOKS, coverFromIsbn } from "@/data/books";
 import { useAuthStore, useWishlistStore, useCartStore } from "@/stores";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Heart, ShoppingBag, Star, Trash2, ShoppingCart } from "lucide-react";
@@ -409,10 +409,79 @@ const downloadInvoicePDF = (order) => {
   printWindow.document.close();
 };
 
+function OrderTracker({ status, currentStep }) {
+  const isCancelled = status?.toLowerCase() === "cancelled";
+  const steps = isCancelled ? [
+    { step: 1, label: "Confirmed", desc: "Order placed" },
+    { step: 2, label: "Cancelled", desc: "Order was cancelled" }
+  ] : [
+    { step: 1, label: "Confirmed", desc: "Order placed" },
+    { step: 2, label: "Processing", desc: "Packed & ready" },
+    { step: 3, label: "On the Way", desc: "Out for delivery" },
+    { step: 4, label: "Delivered", desc: "Received" }
+  ];
+
+  const [lineWidth, setLineWidth] = useState("0%");
+
+  useEffect(() => {
+    const targetWidth = isCancelled ? "100%" : `${((currentStep - 1) / (steps.length - 1)) * 100}%`;
+    const t = setTimeout(() => {
+      setLineWidth(targetWidth);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [currentStep, isCancelled, steps.length]);
+
+  return (
+    <div className="pt-4 mt-4 border-t space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+      <h4 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">Shipment Progress Tracker</h4>
+      
+      <div className="relative">
+        {/* Tracking Line */}
+        <div className="absolute top-4 left-4 right-4 h-1 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-1000 ease-out ${
+              isCancelled 
+                ? "bg-gradient-to-r from-emerald-500 to-red-500" 
+                : "bg-emerald-500"
+            }`}
+            style={{ width: lineWidth }}
+          />
+        </div>
+
+        {/* Steps */}
+        <div className="flex justify-between relative text-center">
+          {steps.map((s) => {
+            const isActive = isCancelled ? true : currentStep >= s.step;
+            const stepBgColor = isCancelled 
+              ? (s.step === 2 ? "bg-red-500 text-white animate-pulse" : "bg-emerald-500 text-white")
+              : (isActive ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground");
+            return (
+              <div key={s.step} className="flex flex-col items-center flex-1">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${stepBgColor} ${
+                  isActive && !isCancelled ? "scale-110 shadow-lg shadow-emerald-500/20" : ""
+                } ${
+                  s.label === "Cancelled" ? "scale-110 shadow-lg shadow-red-500/20 border-2 border-red-200" : ""
+                }`}>
+                  {s.label === "Cancelled" ? "✕" : s.step}
+                </div>
+                <div className="mt-2 text-xs font-bold leading-tight">{s.label}</div>
+                <div className="text-[10px] text-muted-foreground hidden sm:block mt-0.5">{s.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [trackingId, setTrackingId] = useState(null);
+  const [trackingId, setTrackingId] = useState(() => {
+    const saved = localStorage.getItem("trackingOrderId");
+    return saved ? parseInt(saved) : null;
+  });
 
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
@@ -486,7 +555,7 @@ export function Orders() {
       
       <div className="space-y-4">
         {orders.map((o) => {
-          const isTracking = trackingId === o.id;
+          const isTracking = String(trackingId) === String(o.id);
           const currentStep = getStatusStep(o.status);
           const totalBooksCount = o.items ? o.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
           const [name, phone, address, method] = o.shipping_address ? o.shipping_address.split(" | ") : ["Aditya Kumar", "+91 98765 43210", "Default Address", "Method: COD"];
@@ -512,10 +581,10 @@ export function Orders() {
                   {o.items && o.items.map((item, idx) => (
                     <div key={idx} className="relative group/cover">
                       <img
-                        src={`https://covers.openlibrary.org/b/isbn/${item.book?.isbn}-S.jpg`}
-                        alt=""
+                        src={item.book?.cover_image || coverFromIsbn(item.book?.isbn)}
+                        alt={item.book?.title || "Book Cover"}
                         className="w-10 h-14 object-cover rounded shadow border"
-                        onError={(e) => { e.target.src = "https://placehold.co/40x56/1a1a2e/fff?text=Book"; }}
+                        onError={(e) => { e.currentTarget.style.opacity = "0.5"; }}
                       />
                       <span className="absolute -top-1.5 -right-1.5 bg-accent text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
                         {item.quantity}
@@ -539,7 +608,15 @@ export function Orders() {
                     <Button
                       size="sm"
                       variant={isTracking ? "coral" : "outline"}
-                      onClick={() => setTrackingId(isTracking ? null : o.id)}
+                      onClick={() => {
+                        if (isTracking) {
+                          setTrackingId(null);
+                          localStorage.removeItem("trackingOrderId");
+                        } else {
+                          setTrackingId(o.id);
+                          localStorage.setItem("trackingOrderId", o.id);
+                        }
+                      }}
                     >
                       {isTracking ? "Close Tracker" : "Track Order Status"}
                     </Button>
@@ -560,61 +637,9 @@ export function Orders() {
                 </div>
 
                 {/* Tracker Section */}
-                {isTracking && (() => {
-                  const isCancelled = o.status?.toLowerCase() === "cancelled";
-                  const steps = isCancelled ? [
-                    { step: 1, label: "Confirmed", desc: "Order placed" },
-                    { step: 2, label: "Cancelled", desc: "Order was cancelled" }
-                  ] : [
-                    { step: 1, label: "Confirmed", desc: "Order placed" },
-                    { step: 2, label: "Processing", desc: "Packed & ready" },
-                    { step: 3, label: "On the Way", desc: "Out for delivery" },
-                    { step: 4, label: "Delivered", desc: "Received" }
-                  ];
-
-                  return (
-                    <div className="pt-4 mt-4 border-t space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <h4 className="font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">Shipment Progress Tracker</h4>
-                      
-                      <div className="relative">
-                        {/* Tracking Line */}
-                        <div className="absolute top-4 left-4 right-4 h-1 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-700 ${
-                              isCancelled 
-                                ? "bg-gradient-to-r from-emerald-500 to-red-500" 
-                                : "bg-emerald-500"
-                            }`}
-                            style={{ width: isCancelled ? "100%" : `${((currentStep - 1) / 3) * 100}%` }}
-                          />
-                        </div>
-
-                        {/* Steps */}
-                        <div className="flex justify-between relative text-center">
-                          {steps.map((s) => {
-                            const isActive = isCancelled ? true : currentStep >= s.step;
-                            const stepBgColor = isCancelled 
-                              ? (s.step === 2 ? "bg-red-500 text-white animate-pulse" : "bg-emerald-500 text-white")
-                              : (isActive ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground");
-                            return (
-                              <div key={s.step} className="flex flex-col items-center flex-1">
-                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${stepBgColor} ${
-                                  isActive && !isCancelled ? "scale-110 shadow-lg shadow-emerald-500/20" : ""
-                                } ${
-                                  s.label === "Cancelled" ? "scale-110 shadow-lg shadow-red-500/20 border-2 border-red-200" : ""
-                                }`}>
-                                  {s.label === "Cancelled" ? "✕" : s.step}
-                                </div>
-                                <div className="mt-2 text-xs font-bold leading-tight">{s.label}</div>
-                                <div className="text-[10px] text-muted-foreground hidden sm:block mt-0.5">{s.desc}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {isTracking && (
+                  <OrderTracker status={o.status} currentStep={currentStep} />
+                )}
               </div>
             </Card>
           );

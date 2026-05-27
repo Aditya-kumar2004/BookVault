@@ -10,7 +10,12 @@ class BookController extends Controller {
         if ($request->filled('search')) $query->where(fn($q) => $q->where('title','like',"%{$request->search}%")->orWhere('author','like',"%{$request->search}%"));
         if ($request->boolean('featured')) $query->where('is_featured', true);
         if ($request->boolean('deals')) $query->where('is_deal', true);
-        return response()->json($query->paginate(12));
+
+        $perPage = $request->input('per_page', 12);
+        if ($perPage == -1 || $perPage == 'all') {
+            return response()->json(['data' => $query->get()]);
+        }
+        return response()->json($query->paginate($perPage));
     }
     public function show($id) {
         return response()->json(Book::findOrFail($id));
@@ -27,5 +32,19 @@ class BookController extends Controller {
     public function destroy($id) {
         Book::findOrFail($id)->delete();
         return response()->json(['message'=>'Deleted']);
+    }
+    public function uploadImage(Request $request) {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('covers'), $filename);
+            return response()->json([
+                'url' => '/covers/' . $filename
+            ]);
+        }
+        return response()->json(['message' => 'No image uploaded'], 400);
     }
 }

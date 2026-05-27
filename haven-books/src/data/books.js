@@ -12,7 +12,8 @@ export const coverFromIsbn = (isbn) => {
     "9780062316097": "/covers/sapiens_harari.png",
     "9780439708180": "/covers/harry_potter_1.png",
     "9780857197689": "/covers/psychology_money.png",
-    "9780062457714": "/covers/subtle_art.png"
+    "9780062457714": "/covers/subtle_art.png",
+    "9781982137285": "/covers/echoes_eternity.png"
   };
   return covers[isbn] || `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
 };
@@ -157,6 +158,26 @@ export const BOOKS = [
     description: "Between life and death there is a library. Nora Seed gets to undo her regrets.",
     badge: "BESTSELLER",
     discount: 30,
+  },
+  {
+    id: "8",
+    title: "Echoes of Eternity",
+    author: "Aveline Thorne",
+    isbn: "9781982137285",
+    price: 19.99,
+    oldPrice: 29.99,
+    rating: 4.9,
+    reviews: 1420,
+    genre: "Fantasy",
+    stock: 50,
+    pages: 432,
+    language: "English",
+    publisher: "Orbit Books",
+    publishedDate: "2024-05-15",
+    tags: ["fantasy", "cosmic", "bestseller"],
+    description: "A stellar, breathtaking fantasy saga where time, love, and cosmic destiny collide inside a starlit hourglass.",
+    badge: "BESTSELLER",
+    discount: 33,
   },
 ];
 

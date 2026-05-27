@@ -118,6 +118,21 @@ class BookSeeder extends Seeder
                 'is_deal' => false,
                 'cover_image' => '/covers/midnight_library.png',
             ],
+            [
+                'title' => 'Echoes of Eternity',
+                'author' => 'Aveline Thorne',
+                'isbn' => '9781982137285',
+                'price' => 19.99,
+                'original_price' => 29.99,
+                'rating' => 4.9,
+                'genre' => 'Fantasy',
+                'stock' => 50,
+                'pages' => 432,
+                'publisher' => 'Orbit Books',
+                'is_featured' => true,
+                'is_deal' => false,
+                'cover_image' => '/covers/echoes_eternity.png',
+            ],
         ];
 
         foreach ($books as $bookData) {

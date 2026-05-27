@@ -189,6 +189,7 @@ HTML
         try {
             Mail::send([], [], function ($message) use ($email) {
                 $appName = config('app.name', 'BookVault');
+                $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:8080'), '/');
 
                 $message->to($email)
                     ->subject("Welcome to BookVault! Here is your 20% discount code 🎉")
@@ -237,7 +238,7 @@ HTML
 
             <!-- CTA Button -->
             <div style="text-align: center; margin: 36px 0 24px 0;">
-                <a href="http://localhost:8080" style="display: inline-block; background: linear-gradient(90deg, #F4623A 0%, #ff7e5f 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; font-size: 15px; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 15px rgba(244, 98, 58, 0.35); text-transform: uppercase; letter-spacing: 1px;">
+                <a href="{$frontendUrl}" style="display: inline-block; background: linear-gradient(90deg, #F4623A 0%, #ff7e5f 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; font-size: 15px; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 15px rgba(244, 98, 58, 0.35); text-transform: uppercase; letter-spacing: 1px;">
                     Shop Now & Save
                 </a>
             </div>

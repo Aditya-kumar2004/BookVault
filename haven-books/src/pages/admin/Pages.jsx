@@ -195,22 +195,184 @@ export function Overview() {
 
 /* -------------- Books admin -------------- */
 export function BooksAdmin() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const filtered = ALL_BOOKS.filter((b) => b.title.toLowerCase().includes(q.toLowerCase()));
+
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
+
+  // Form states
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [genre, setGenre] = useState("");
+  const [isbn, setIsbn] = useState("");
+  const [price, setPrice] = useState("");
+  const [originalPrice, setOriginalPrice] = useState("");
+  const [stock, setStock] = useState(10);
+  const [pages, setPages] = useState("");
+  const [publisher, setPublisher] = useState("");
+  const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [isDeal, setIsDeal] = useState(false);
+
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchBooks = () => {
+    import("../../lib/api").then(({ default: api }) => {
+      api.get("/books", { params: { per_page: -1 } })
+        .then(({ data }) => {
+          setBooks(data.data || []);
+          setLoading(false);
+        })
+        .catch(() => {
+          toast.error("Failed to load books from server.");
+          setLoading(false);
+        });
+    });
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const openAddModal = () => {
+    setEditingBook(null);
+    setTitle("");
+    setAuthor("");
+    setGenre("");
+    setIsbn("");
+    setPrice("");
+    setOriginalPrice("");
+    setStock(10);
+    setPages("");
+    setPublisher("");
+    setDescription("");
+    setCoverImage("");
+    setIsFeatured(false);
+    setIsDeal(false);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (book) => {
+    setEditingBook(book);
+    setTitle(book.title || "");
+    setAuthor(book.author || "");
+    setGenre(book.genre || "");
+    setIsbn(book.isbn || "");
+    setPrice(book.price || "");
+    setOriginalPrice(book.original_price || "");
+    setStock(book.stock || 0);
+    setPages(book.pages || "");
+    setPublisher(book.publisher || "");
+    setDescription(book.description || "");
+    setCoverImage(book.cover_image || "");
+    setIsFeatured(!!book.is_featured);
+    setIsDeal(!!book.is_deal);
+    setIsModalOpen(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    setUploading(true);
+    try {
+      const { default: api } = await import("../../lib/api");
+      const { data } = await api.post("/books/upload-image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setCoverImage(data.url);
+      toast.success("Cover image uploaded successfully! 📸");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || !author.trim() || !genre.trim() || !price) {
+      return toast.error("Please fill in all required fields.");
+    }
+
+    setSubmitting(true);
+    try {
+      const { default: api } = await import("../../lib/api");
+      const payload = {
+        title: title.trim(),
+        author: author.trim(),
+        genre: genre.trim(),
+        isbn: isbn.trim() || null,
+        price: parseFloat(price),
+        original_price: originalPrice ? parseFloat(originalPrice) : null,
+        stock: parseInt(stock),
+        pages: pages ? parseInt(pages) : null,
+        publisher: publisher.trim() || null,
+        description: description.trim() || null,
+        cover_image: coverImage || null,
+        is_featured: !!isFeatured,
+        is_deal: !!isDeal,
+      };
+
+      if (editingBook) {
+        await api.put(`/books/${editingBook.id}`, payload);
+        toast.success("Book updated successfully! 🎉");
+      } else {
+        await api.post("/books", payload);
+        toast.success("Book added successfully! 🎉");
+      }
+      setIsModalOpen(false);
+      fetchBooks();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save book.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this book?")) return;
+    try {
+      const { default: api } = await import("../../lib/api");
+      await api.delete(`/books/${id}`);
+      toast.success("Book deleted successfully! 🗑️");
+      fetchBooks();
+    } catch (err) {
+      toast.error("Failed to delete book.");
+    }
+  };
+
+  const filtered = books.filter((b) =>
+    (b.title || "").toLowerCase().includes(q.toLowerCase()) ||
+    (b.author || "").toLowerCase().includes(q.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-3xl font-bold">Books</h1>
-          <p className="text-muted-foreground">Manage your catalogue.</p>
+          <p className="text-muted-foreground">Manage your dynamic literary catalogue.</p>
         </div>
-        <Button variant="coral" onClick={() => toast("Open Add Book form")}><Plus /> Add new book</Button>
+        <Button variant="coral" onClick={openAddModal} className="font-bold flex items-center gap-1.5 shadow-lg shadow-coral/10">
+          <Plus className="h-4 w-4" /> Add new book
+        </Button>
       </div>
 
-      <Card className="p-4">
-        <div className="relative max-w-sm">
+      <Card className="p-4 flex gap-4 items-center">
+        <div className="relative max-w-sm flex-1">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by title..." className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by title or author..." className="pl-9" />
         </div>
       </Card>
 
@@ -218,33 +380,314 @@ export function BooksAdmin() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead></TableHead><TableHead>Title</TableHead><TableHead>Author</TableHead>
-              <TableHead>Genre</TableHead><TableHead>ISBN</TableHead>
-              <TableHead>Price</TableHead><TableHead>Stock</TableHead>
-              <TableHead>Status</TableHead><TableHead></TableHead>
+              <TableHead></TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Author</TableHead>
+              <TableHead>Genre</TableHead>
+              <TableHead>ISBN</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell>
-                  <div className="w-10 h-14 rounded overflow-hidden bg-muted">
-                    <img src={coverFromIsbn(b.isbn)} alt="" className="w-full h-full object-cover" />
-                  </div>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground animate-pulse">
+                  Loading catalogue database...
                 </TableCell>
-                <TableCell className="font-medium">{b.title}</TableCell>
-                <TableCell>{b.author}</TableCell>
-                <TableCell>{b.genre}</TableCell>
-                <TableCell className="font-mono text-xs">{b.isbn}</TableCell>
-                <TableCell>₹{b.price.toFixed(2)}</TableCell>
-                <TableCell>{b.stock}</TableCell>
-                <TableCell><Badge variant={b.stock > 10 ? "default" : "destructive"}>{b.stock > 10 ? "Active" : "Low"}</Badge></TableCell>
-                <TableCell><Button variant="ghost" size="sm">Edit</Button></TableCell>
               </TableRow>
-            ))}
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  No books found. Try adding a new masterpiece!
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell>
+                    <div className="w-10 h-14 rounded overflow-hidden bg-muted border border-border/30">
+                      <img 
+                        src={b.cover_image || coverFromIsbn(b.isbn)} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = `https://placehold.co/100x150?text=Book`; }}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{b.title}</TableCell>
+                  <TableCell>{b.author}</TableCell>
+                  <TableCell>{b.genre}</TableCell>
+                  <TableCell className="font-mono text-xs">{b.isbn || "N/A"}</TableCell>
+                  <TableCell className="font-semibold text-accent">₹{parseFloat(b.price).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <span className={b.stock <= 10 ? "text-red-500 font-bold" : ""}>
+                      {b.stock}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={b.stock > 10 ? "bg-emerald-500 text-white font-bold" : "bg-red-500 text-white font-bold"}>
+                      {b.stock > 10 ? "Active" : "Low"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-1.5 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => openEditModal(b)} className="h-8 hover:bg-accent/10 hover:text-accent">
+                        <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(b.id)} className="h-8 text-red-500 hover:bg-red-500/10 hover:text-red-600">
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>
+
+      {/* custom add/edit modal overlay */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl rounded-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl font-bold flex items-center gap-2">
+              {editingBook ? "✏️ Edit Book Record" : "📖 Add New Masterpiece"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Define the physical and monetary metadata parameters for this collection catalog.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Book Title <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. The Midnight Library"
+                  className="rounded-xl animate-fadeIn"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Author Name <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  required
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="e.g. Matt Haig"
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Genre <span className="text-red-500">*</span></Label>
+                <select
+                  required
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+                >
+                  <option value="">-- Select Genre --</option>
+                  <option value="Fiction">Fiction</option>
+                  <option value="Nonfiction">Nonfiction</option>
+                  <option value="Fantasy">Fantasy</option>
+                  <option value="Thriller">Thriller</option>
+                  <option value="Romance">Romance</option>
+                  <option value="Biography">Biography</option>
+                  <option value="Sci-Fi">Sci-Fi</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ISBN (SKU)</Label>
+                <Input
+                  type="text"
+                  value={isbn}
+                  onChange={(e) => setIsbn(e.target.value)}
+                  placeholder="13-digit code"
+                  className="rounded-xl font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Stock Volume <span className="text-red-500">*</span></Label>
+                <Input
+                  type="number"
+                  required
+                  min="0"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price (₹) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  required
+                  min="0"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="e.g. 14.99"
+                  className="rounded-xl font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Original Price (₹)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={originalPrice}
+                  onChange={(e) => setOriginalPrice(e.target.value)}
+                  placeholder="Before sale discount"
+                  className="rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Page Count</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={pages}
+                  onChange={(e) => setPages(e.target.value)}
+                  placeholder="e.g. 304"
+                  className="rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Publisher</Label>
+                <Input
+                  type="text"
+                  value={publisher}
+                  onChange={(e) => setPublisher(e.target.value)}
+                  placeholder="e.g. HarperCollins"
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Custom Book Cover Image Uploader & Preview */}
+            <div className="space-y-2 border border-border/40 p-4 rounded-xl bg-muted/20">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">Book Cover Image</Label>
+              <div className="flex gap-4 items-center">
+                <div className="h-20 w-14 rounded overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center text-[10px] text-muted-foreground relative">
+                  {coverImage ? (
+                    <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span>No image</span>
+                  )}
+                </div>
+                
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      id="book-cover-upload"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => document.getElementById("book-cover-upload").click()}
+                      className="rounded-xl border-accent/20 hover:border-accent hover:bg-accent/5 font-semibold text-xs h-9 px-4 shrink-0"
+                    >
+                      {uploading ? "Uploading..." : "Upload Cover Image 📸"}
+                    </Button>
+                    <span className="text-[10px] text-muted-foreground">Accepts JPEG, PNG, WEBP (Max 2MB)</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">Or Image URL Address</Label>
+                    <Input
+                      type="text"
+                      value={coverImage}
+                      onChange={(e) => setCoverImage(e.target.value)}
+                      placeholder="Paste image web link directly..."
+                      className="h-8 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Book Description / Synopsis</Label>
+              <textarea
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Write a brief, engaging summary of the book..."
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex gap-6 py-2 border-t border-border/40 mt-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="chk-featured"
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="rounded text-coral focus:ring-coral h-4 w-4"
+                />
+                <Label htmlFor="chk-featured" className="text-xs font-bold text-muted-foreground cursor-pointer select-none">Feature on Main Slider</Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="chk-deal"
+                  checked={isDeal}
+                  onChange={(e) => setIsDeal(e.target.checked)}
+                  className="rounded text-coral focus:ring-coral h-4 w-4"
+                />
+                <Label htmlFor="chk-deal" className="text-xs font-bold text-muted-foreground cursor-pointer select-none">Mark as Daily Deal</Label>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsModalOpen(false)}
+                className="rounded-xl text-xs font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="coral"
+                disabled={submitting}
+                className="rounded-xl text-xs font-bold shadow-lg shadow-coral/10"
+              >
+                {submitting ? "Saving..." : editingBook ? "Update Masterpiece" : "Publish Book"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -538,27 +981,147 @@ export function GenresAdmin() {
 
 /* -------------- Generic placeholder admin pages -------------- */
 export function InventoryAdmin() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchBooks = () => {
+    import("../../lib/api").then(({ default: api }) => {
+      api.get("/books", { params: { per_page: -1 } })
+        .then(({ data }) => {
+          setBooks(data.data || []);
+          setLoading(false);
+        })
+        .catch(() => {
+          toast.error("Failed to load inventory from server.");
+          setLoading(false);
+        });
+    });
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const handleStockChange = (bookId, newStock) => {
+    if (newStock < 0) return;
+    
+    // Optimistic update
+    const prevBooks = [...books];
+    setBooks(prev => prev.map(b => b.id === bookId ? { ...b, stock: newStock } : b));
+
+    import("../../lib/api").then(({ default: api }) => {
+      api.put(`/books/${bookId}`, { stock: newStock })
+        .then(() => {
+          toast.success("Stock updated successfully");
+        })
+        .catch((err) => {
+          setBooks(prevBooks);
+          toast.error(err.response?.data?.message || "Failed to update stock");
+        });
+    });
+  };
+
+  const exportToCSV = () => {
+    if (books.length === 0) {
+      toast.error("No inventory data to export.");
+      return;
+    }
+
+    const headers = ["Title", "SKU/ISBN", "Stock", "Threshold", "Genre", "Price"];
+    const csvRows = [headers.join(",")];
+
+    books.forEach(b => {
+      const title = `"${(b.title || "").replace(/"/g, '""')}"`;
+      const isbn = `"${(b.isbn || "").replace(/"/g, '""')}"`;
+      const stock = b.stock;
+      const threshold = 10;
+      const genre = `"${(b.genre || "").replace(/"/g, '""')}"`;
+      const price = b.price;
+      csvRows.push([title, isbn, stock, threshold, genre, price].join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventory_report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully! 📊");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="font-display text-3xl font-bold">Inventory</h1>
-        <Button variant="outline">Export CSV</Button>
+        <div>
+          <h1 className="font-display text-3xl font-bold">Inventory</h1>
+          <p className="text-muted-foreground">Monitor and manage book stock volumes.</p>
+        </div>
+        <Button variant="coral" onClick={exportToCSV} className="font-bold flex items-center gap-1.5 shadow-lg shadow-coral/10">Export CSV</Button>
       </div>
       <Card>
         <Table>
-          <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>SKU</TableHead><TableHead>Stock</TableHead><TableHead>Threshold</TableHead><TableHead></TableHead></TableRow></TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Threshold</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
-            {ALL_BOOKS.slice(0, 8).map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-medium">{b.title}</TableCell>
-                <TableCell className="font-mono text-xs">{b.isbn}</TableCell>
-                <TableCell>{b.stock}</TableCell>
-                <TableCell>10</TableCell>
-                <TableCell><div className="flex gap-1">
-                  <Button variant="outline" size="sm">−</Button><Button variant="outline" size="sm">+</Button>
-                </div></TableCell>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  Loading inventory details...
+                </TableCell>
               </TableRow>
-            ))}
+            ) : books.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No books found in inventory.
+                </TableCell>
+              </TableRow>
+            ) : (
+              books.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">{b.title}</TableCell>
+                  <TableCell className="font-mono text-xs">{b.isbn || "N/A"}</TableCell>
+                  <TableCell>
+                    <span className={b.stock <= 10 ? "text-red-500 font-bold" : ""}>
+                      {b.stock}
+                    </span>
+                  </TableCell>
+                  <TableCell>10</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-1.5 justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleStockChange(b.id, b.stock - 1)}
+                      >
+                        −
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleStockChange(b.id, b.stock + 1)}
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>

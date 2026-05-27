@@ -177,6 +177,38 @@ export function CartPage() {
   });
   const [selectedBank, setSelectedBank] = useState("");
 
+  useEffect(() => {
+    if (showSuccess) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.5 },
+          colors: ["#F4623A", "#0D1B3E", "#1B4332", "#FFD700", "#FF69B4"]
+        });
+        setTimeout(() => {
+          confetti({
+            particleCount: 100,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: ["#F4623A", "#FFD700", "#1B4332"]
+          });
+        }, 200);
+        setTimeout(() => {
+          confetti({
+            particleCount: 100,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: ["#0D1B3E", "#FF69B4", "#FFD700"]
+          });
+        }, 350);
+      });
+    }
+  }, [showSuccess]);
+
   const handleCardNumberChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 16) value = value.slice(0, 16);

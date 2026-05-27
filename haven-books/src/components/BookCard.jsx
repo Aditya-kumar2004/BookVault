@@ -6,16 +6,29 @@ import { cn } from "@/lib/utils";
 import { useCartStore, useWishlistStore, useAuthStore } from "@/stores";
 import { toast } from "sonner";
 
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 const initials = (title) =>
   title.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
 export function BookCover({ book, className }) {
   const [errored, setErrored] = useState(false);
+
+  let coverUrl = coverFromIsbn(book.isbn);
+  if (book.cover_image) {
+    if (book.cover_image.startsWith("http") || book.cover_image.startsWith("data:")) {
+      coverUrl = book.cover_image;
+    } else {
+      const path = book.cover_image.startsWith("/") ? book.cover_image : `/${book.cover_image}`;
+      coverUrl = `${BACKEND_URL}${path}`;
+    }
+  }
+
   return (
     <div className={cn("book-cover relative", className)}>
       {!errored ? (
         <img
-          src={coverFromIsbn(book.isbn)}
+          src={coverUrl}
           alt={`${book.title} cover`}
           loading="lazy"
           decoding="async"
@@ -31,6 +44,7 @@ export function BookCover({ book, className }) {
     </div>
   );
 }
+
 
 export function BookCard({ book, showBestsellerBadge = false, isWishlist = false }) {
   const navigate = useNavigate();

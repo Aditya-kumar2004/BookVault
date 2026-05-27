@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus']);
         Route::post('/books', [BookController::class, 'store']);
+        Route::post('/books/upload-image', [BookController::class, 'uploadImage']);
         Route::put('/books/{id}', [BookController::class, 'update']);
         Route::delete('/books/{id}', [BookController::class, 'destroy']);
         Route::get('/users', [AuthController::class, 'index']);

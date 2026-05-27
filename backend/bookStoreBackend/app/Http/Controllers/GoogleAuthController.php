@@ -11,10 +11,12 @@ class GoogleAuthController extends Controller {
     }
 
     public function callback() {
+        $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:8080'), '/');
+
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Exception $e) {
-            return redirect('http://localhost:8080/login?error=google_failed');
+            return redirect($frontendUrl . '/login?error=google_failed');
         }
 
         $user = User::where('email', $googleUser->getEmail())->first();
@@ -31,7 +33,7 @@ class GoogleAuthController extends Controller {
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return redirect(
-            'http://localhost:8080/auth/google/success?token=' . $token .
+            $frontendUrl . '/auth/google/success?token=' . $token .
             '&user=' . urlencode(json_encode([
                 'id'    => $user->id,
                 'name'  => $user->name,
